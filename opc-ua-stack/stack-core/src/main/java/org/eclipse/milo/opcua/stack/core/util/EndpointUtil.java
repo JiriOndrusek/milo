@@ -19,8 +19,8 @@ import org.eclipse.milo.opcua.stack.core.types.structured.EndpointDescription;
 
 public class EndpointUtil {
 
-    private static final Pattern ENDPOINT_URL_PATTERN =
-        Pattern.compile("(opc.tcp|http|https|opc.http|opc.https|opc.ws|opc.wss)://([^:/]+|\\[.*])(:\\d+)?(/.*)?");
+    private static final Pattern ENDPOINT_URL_PATTERN = Pattern
+            .compile("(opc.tcp|http|https|opc.http|opc.https|opc.ws|opc.wss)://(.+:.+@)?([^:/]+|\\[.*])(:\\d+)?(/.*)?");
 
     @Nullable
     public static String getScheme(@Nonnull String endpointUrl) {
@@ -38,6 +38,17 @@ public class EndpointUtil {
         Matcher matcher = ENDPOINT_URL_PATTERN.matcher(endpointUrl);
 
         if (matcher.matches()) {
+            return matcher.group(3);
+        }
+
+        return null;
+    }
+
+    @Nullable
+    public static String getCredentials(@Nonnull String endpointUrl) {
+        Matcher matcher = ENDPOINT_URL_PATTERN.matcher(endpointUrl);
+
+        if (matcher.matches()) {
             return matcher.group(2);
         }
 
@@ -49,7 +60,7 @@ public class EndpointUtil {
 
         if (matcher.matches()) {
             try {
-                String group = matcher.group(3);
+                String group = matcher.group(4);
                 if (group != null && group.startsWith(":")) {
                     group = group.substring(1);
                     return Integer.valueOf(group);
@@ -75,7 +86,7 @@ public class EndpointUtil {
         Matcher matcher = ENDPOINT_URL_PATTERN.matcher(endpointUrl);
 
         if (matcher.matches()) {
-            String path = matcher.group(4);
+            String path = matcher.group(5);
 
             if (path == null || path.isEmpty()) {
                 path = "/";
@@ -86,6 +97,22 @@ public class EndpointUtil {
             return path;
         } else {
             return "/";
+        }
+    }
+
+    /**
+     * Removes username:password from the URL.
+     *
+     * @param endpointUrl the endpoint URL.
+     * @return the URL without credentials part.
+     */
+    public static String getUrlWithoutCredentials(@Nonnull String endpointUrl) {
+        Matcher matcher = ENDPOINT_URL_PATTERN.matcher(endpointUrl);
+
+        if (matcher.matches() && matcher.group(2) != null) {
+            return new StringBuilder(endpointUrl).replace(matcher.start(2), matcher.end(2), "").toString();
+        } else {
+            return endpointUrl;
         }
     }
 
@@ -145,22 +172,27 @@ public class EndpointUtil {
         if (matcher.matches()) {
             String scheme = matcher.group(1);
 
-            String newHostname = matcher.group(2);
+            String newCredentials = matcher.group(2);
+            if (newCredentials == null) {
+                newCredentials = "";
+            }
+
+            String newHostname = matcher.group(3);
             if (hostname != null) {
                 newHostname = hostname;
             }
 
-            String newPort = matcher.group(3); // e.g. ":4840"
+            String newPort = matcher.group(4); // e.g. ":4840"
             if (port >= 0) {
                 newPort = ":" + port;
             } else if (newPort == null) {
                 newPort = "";
             }
 
-            String path = matcher.group(4); // e.g. "/" or "/foo" or "/foo/bar"
+            String path = matcher.group(5); // e.g. "/" or "/foo" or "/foo/bar"
             if (path == null) path = "";
 
-            return scheme + "://" + newHostname + newPort + path;
+            return scheme + "://" + newCredentials + newHostname + newPort + path;
         } else {
             return endpointUrl;
         }

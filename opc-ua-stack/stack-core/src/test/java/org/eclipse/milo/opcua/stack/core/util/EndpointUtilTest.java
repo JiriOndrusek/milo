@@ -55,6 +55,11 @@ public class EndpointUtilTest {
     }
 
     @Test
+    public void testRemoveCredentials() {
+        assertEquals(EndpointUtil.getUrlWithoutCredentials("opc.tcp://foo:bar@localhost:4840/foo"), "opc.tcp://localhost:4840/foo");
+    }
+
+    @Test
     public void testIpv6() {
         String withPath = "opc.tcp://[fe80::9289:e377:bacb:f608%enp0s31f6]:4840/foo";
         String withoutPath = "opc.tcp://[fe80::9289:e377:bacb:f608%enp0s31f6]:4840";
@@ -153,6 +158,10 @@ public class EndpointUtilTest {
         assertEquals(
             updateUrl(scheme + "://127.0.0.1:4840/foo/bar", "192.168.0.1"),
             scheme + "://192.168.0.1:4840/foo/bar");
+
+        assertEquals(
+            updateUrl(scheme + "://user:passwd@127.0.0.1:4840/foo/bar", "192.168.0.1"),
+            scheme + "://user:passwd@192.168.0.1:4840/foo/bar");
     }
 
     private void testReplaceUrlPortWithScheme(String scheme) {

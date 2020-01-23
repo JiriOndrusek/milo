@@ -192,7 +192,9 @@ public class DiscoveryClient {
                         "unsupported protocol: " + scheme));
         }
 
-        return getEndpoints(endpointUrl, profileUri);
+        String urlWithoutCredentials = EndpointUtil.getUrlWithoutCredentials(endpointUrl);
+
+        return getEndpoints(urlWithoutCredentials, profileUri);
     }
 
     private static CompletableFuture<List<EndpointDescription>> getEndpoints(String endpointUrl, String profileUri) {
