@@ -19,8 +19,8 @@ import org.eclipse.milo.opcua.stack.core.types.structured.EndpointDescription;
 
 public class EndpointUtil {
 
-    private static final Pattern ENDPOINT_URL_PATTERN =
-        Pattern.compile("(opc.tcp|http|https|opc.http|opc.https|opc.ws|opc.wss)://([^:/]+|\\[.*])(:\\d+)?(/.*)?");
+    private static final Pattern ENDPOINT_URL_PATTERN = Pattern
+            .compile("(opc.tcp|http|https|opc.http|opc.https|opc.ws|opc.wss)://(.+:.+@)?([^:/]+|\\[.*])(:\\d+)?(/.*)?");
 
     @Nullable
     public static String getScheme(@Nonnull String endpointUrl) {
@@ -38,6 +38,17 @@ public class EndpointUtil {
         Matcher matcher = ENDPOINT_URL_PATTERN.matcher(endpointUrl);
 
         if (matcher.matches()) {
+            return matcher.group(3);
+        }
+
+        return null;
+    }
+
+    @Nullable
+    public static String getCredentials(@Nonnull String endpointUrl) {
+        Matcher matcher = ENDPOINT_URL_PATTERN.matcher(endpointUrl);
+
+        if (matcher.matches()) {
             return matcher.group(2);
         }
 
@@ -49,7 +60,7 @@ public class EndpointUtil {
 
         if (matcher.matches()) {
             try {
-                String group = matcher.group(3);
+                String group = matcher.group(4);
                 if (group != null && group.startsWith(":")) {
                     group = group.substring(1);
                     return Integer.valueOf(group);
